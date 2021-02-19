@@ -2,14 +2,14 @@ import { panoptes } from '@zooniverse/panoptes-js'
 import fetch from 'node-fetch'
 
 async function fetchWorkflowData (activeWorkflows, env) {
-  const response = await panoptes
-    .get('/workflows', {
-      complete: false,
-      env,
-      fields: 'completeness,grouped',
-      id: activeWorkflows.join(','),
-      include: 'subject_sets'
-    })
+  const query = {
+    complete: false,
+    env,
+    fields: 'completeness,grouped',
+    id: activeWorkflows.join(','),
+    include: 'subject_sets'
+  }
+  const response = await panoptes.get('/workflows', query)
   const { workflows, linked } = response.body
   const subjectSets = linked ? linked.subject_sets : []
   await Promise.allSettled(subjectSets.map(subjectSet => fetchPreviewImage(subjectSet, env)))
@@ -33,7 +33,7 @@ async function fetchWorkflowCellectStatus(workflow) {
   const workflowURL = `https://cellect.zooniverse.org/workflows/${workflow.id}/status`
   const response = await fetch(workflowURL)
   const body = await response.json()
-  const { groups } = body ?? {}
+  const groups = body.groups ?? {}
   return groups
 }
 
@@ -50,6 +50,17 @@ async function fetchPreviewImage (subjectSet, env) {
 }
 
 async function buildWorkflow(workflow, displayName, subjectSets, isDefault) {
+  const workflowData = {
+    completeness: workflow.completeness || 0,
+    default: isDefault,
+    displayName,
+    grouped: false,
+    id: workflow.id,
+    subjectSets: []
+  }
+  if (!workflow.grouped) {
+    return workflowData
+  }
   const subjectSetCounts = await fetchWorkflowCellectStatus(workflow)
   const workflowSubjectSets = workflow.links.subject_sets
     .map(subjectSetID => {
@@ -59,14 +70,7 @@ async function buildWorkflow(workflow, displayName, subjectSets, isDefault) {
     })
     .filter(Boolean)
 
-  return {
-    completeness: workflow.completeness || 0,
-    default: isDefault,
-    displayName,
-    grouped: workflow.grouped,
-    id: workflow.id,
-    subjectSets: workflowSubjectSets
-  }
+  return Object.assign(workflowData, { grouped: true, subjectSets: workflowSubjectSets })
 }
 
 async function fetchWorkflowsHelper (language = 'en', activeWorkflows, defaultWorkflow, env) {
@@ -80,7 +84,7 @@ async function fetchWorkflowsHelper (language = 'en', activeWorkflows, defaultWo
     return buildWorkflow(workflow, displayName, subjectSets, isDefault)
   })
   const workflowStatuses = await Promise.allSettled(awaitWorkflows)
-  const workflowsWithSubjectSets = workflowStatuses.map(result => result.value)
+  const workflowsWithSubjectSets = workflowStatuses.map(result => result.value || result.reason)
   return workflowsWithSubjectSets
 }
 

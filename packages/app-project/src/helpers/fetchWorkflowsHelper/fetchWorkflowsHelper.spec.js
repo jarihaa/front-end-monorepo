@@ -15,7 +15,7 @@ describe('Helpers > fetchWorkflowsHelper', function () {
     {
       id: '2',
       completeness: 0.7,
-      grouped: false,
+      grouped: true,
       links: {
         subject_sets: ['1', '2', '3']
       }
@@ -56,9 +56,7 @@ describe('Helpers > fetchWorkflowsHelper', function () {
     const cellect = nock('https://cellect.zooniverse.org')
     .persist()
     .get('/workflows/1/status')
-    .reply(200, {
-      groups: availableSubjects
-    })
+    .reply(200, {})
     .get('/workflows/2/status')
     .reply(200, {
       groups: availableSubjects
@@ -98,11 +96,7 @@ describe('Helpers > fetchWorkflowsHelper', function () {
         grouped: false,
         id: '1',
         displayName: 'Foo',
-        subjectSets: [
-          Object.assign(subjectSet('1'), { availableSubjects: availableSubjects[1]}),
-          Object.assign(subjectSet('2'), { availableSubjects: availableSubjects[2]}),
-          Object.assign(subjectSet('3'), { availableSubjects: availableSubjects[3]})
-        ]
+        subjectSets: []
       }
     ])
   })
@@ -135,16 +129,12 @@ describe('Helpers > fetchWorkflowsHelper', function () {
         grouped: false,
         id: '1',
         displayName: 'Foo',
-        subjectSets: [
-          Object.assign(subjectSet('1'), { availableSubjects: availableSubjects[1]}),
-          Object.assign(subjectSet('2'), { availableSubjects: availableSubjects[2]}),
-          Object.assign(subjectSet('3'), { availableSubjects: availableSubjects[3]})
-        ]
+        subjectSets: []
       },
       {
         completeness: 0.7,
         default: false,
-        grouped: false,
+        grouped: true,
         id: '2',
         displayName: 'Bar',
         subjectSets: [
@@ -185,16 +175,12 @@ describe('Helpers > fetchWorkflowsHelper', function () {
           grouped: false,
           id: '1',
           displayName: 'Foo',
-          subjectSets: [
-            Object.assign(subjectSet('1'), { availableSubjects: availableSubjects[1]}),
-            Object.assign(subjectSet('2'), { availableSubjects: availableSubjects[2]}),
-            Object.assign(subjectSet('3'), { availableSubjects: availableSubjects[3]})
-          ]
+          subjectSets: []
         },
         {
           completeness: 0.7,
           default: true,
-          grouped: false,
+          grouped: true,
           id: '2',
           displayName: 'Bar',
           subjectSets: [
